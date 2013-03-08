@@ -1,0 +1,1 @@
+require 'bdf/version'

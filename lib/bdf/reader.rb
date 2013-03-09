@@ -25,8 +25,16 @@ module Bdf
     def render_font! fbbx, origin_delta, overwrite = false
       fbbx.each_with_index do |row, y|
         r = self[y + origin_delta[:y]]
-        row.each_with_index do |column, x|
-          r[x + origin_delta[:x]] = column unless not overwrite and r[x + origin_delta[:x]]
+        if r
+          row.each_with_index do |column, x|
+            if x + origin_delta[:x] < r.length
+              r[x + origin_delta[:x]] = column unless not overwrite and r[x + origin_delta[:x]]
+            else
+              # Clipping in x direction!
+            end
+          end
+        else
+          # Clipping in y direction!
         end
       end
       self
@@ -239,7 +247,7 @@ module Bdf
             when /ENDPROPERTIES/
               properties_counter = nil
 
-            when /STARTCHAR\s+([a-z0-9]+)/i
+            when /STARTCHAR\s+([a-z0-9 ]+)/i
               char = @chars[$1.to_sym] = {}
             end
           end

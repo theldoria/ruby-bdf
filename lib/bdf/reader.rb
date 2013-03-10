@@ -52,6 +52,7 @@ module Bdf
       @file = file
       @properties = {}
       @chars = {}
+      @encoding = {}
     end
 
     def get_origin char = nil
@@ -145,12 +146,18 @@ module Bdf
       result << "x: #{x}, y: #{y}"
     end
 
-    def print_char bbx, char, x, y
-      fbbx = char_to_bbx(char)
-      origin_delta = get_origin_delta(char)
+    def print_char bbx, charackter, x, y
+      if !charackter or charackter.is_a?(Symbol)
+        char_symbol = charackter
+      else
+        char_symbol = @encoding[charackter.unpack('C*').first]
+      end
+      char_symbol = @chars.keys.first unless @chars.has_key?(char_symbol)
+      fbbx = char_to_bbx(char_symbol)
+      origin_delta = get_origin_delta(char_symbol)
       origin_delta[:x] += x
       origin_delta[:y] += y
-      char = @chars[char]
+      char = @chars[char_symbol]
 
       bbx.render_font!(fbbx, origin_delta).to_s
 
@@ -160,10 +167,19 @@ module Bdf
       [bbx, x, y]
     end
 
+    def print bbx, text, x, y
+      text.unpack('C*').map do |char|
+        bbx, x, y = print_char(bbx, @encoding[char], x, y)
+      end
+
+      [bbx, x, y]
+    end
+
     def load
       return false unless File.exists?(@file)
 
       char = nil
+      char_symbol = nil
       bitmap = nil
       properties_counter = nil
       File.open(@file, 'r').each_line do |line|
@@ -190,6 +206,7 @@ module Bdf
               case line
               when /ENDCHAR/
                 char = nil
+                char_symbol = nil
                 bitmap = nil
 
               else
@@ -199,6 +216,7 @@ module Bdf
               case line
               when /ENCODING\s+([0-9.]+)/
                 char[:encoding] = $1.to_i
+                @encoding[char[:encoding]] = char_symbol
 
               when /DWIDTH\s+([0-9.]+)\s+([0-9.]+)/
                 char[:device_width] = [$1.to_i, $2.to_i]
@@ -248,7 +266,8 @@ module Bdf
               properties_counter = nil
 
             when /STARTCHAR\s+([a-z0-9 ]+)/i
-              char = @chars[$1.to_sym] = {}
+              char_symbol = $1.to_sym
+              char = @chars[char_symbol] = {}
             end
           end
         end

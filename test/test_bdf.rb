@@ -77,6 +77,19 @@ class TestBdf < Test::Unit::TestCase
     puts
     puts screen.to_s
   end
+
+
+  def test_load_print2
+    bbx = @bdf.bounding_box
+    screen = @bdf.create_bounding_box_array(160, 43)
+    7.times do |row|
+      x = 0
+      y = bbx[:y] * row
+      _, x, y = @bdf.print(screen, "0123456789David\\", x, y)
+    end
+    puts
+    puts screen.to_s
+  end
 end
 
 class TestBdfExample < Test::Unit::TestCase

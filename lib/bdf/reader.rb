@@ -150,7 +150,7 @@ module Bdf
       if !charackter or charackter.is_a?(Symbol)
         char_symbol = charackter
       else
-        char_symbol = @encoding[charackter.unpack('C*').first]
+        char_symbol = @encoding[charackter.unpack('U*').first]
       end
       char_symbol = @chars.keys.first unless @chars.has_key?(char_symbol)
       fbbx = char_to_bbx(char_symbol)
@@ -168,7 +168,7 @@ module Bdf
     end
 
     def print bbx, text, x, y
-      text.unpack('C*').map do |char|
+      text.unpack('U*').map do |char|
         bbx, x, y = print_char(bbx, @encoding[char], x, y)
       end
 
